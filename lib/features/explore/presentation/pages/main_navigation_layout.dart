@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/widgets/bottom_nav_bar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'home_page.dart';
 import 'home_guardian_page.dart';
 import '../../../narrator/presentation/pages/narrador_page.dart';
@@ -7,41 +9,34 @@ import '../../../guardian/presentation/pages/record_page.dart';
 import '../../../search/presentation/pages/search_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
-class MainNavigationLayout extends StatefulWidget {
+class MainNavigationLayout extends ConsumerStatefulWidget {
   const MainNavigationLayout({super.key});
 
   @override
-  State<MainNavigationLayout> createState() => _MainNavigationLayoutState();
+  ConsumerState<MainNavigationLayout> createState() => _MainNavigationLayoutState();
 }
 
-class _MainNavigationLayoutState extends State<MainNavigationLayout> {
+class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
   int _currentIndex = 0;
-  final bool _isGuardian = false;
-
-  final List<Widget> _pages = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _rebuildPages();
-  }
-
-  void _rebuildPages() {
-    _pages
-      ..clear()
-      ..addAll([
-        _isGuardian ? const HomeGuardianPage() : const HomePage(),
-        const NarradorChatPage(),
-        const RecordMemoryPage(),
-        const SearchPage(),
-        const UserProfilePage(),
-      ]);
-  }
 
   @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(authProvider);
+    final isGuardian = auth.isGuardian;
+
+    final pages = <Widget>[
+      isGuardian ? const HomeGuardianPage() : const HomePage(),
+      const NarradorChatPage(),
+      const RecordMemoryPage(),
+      const SearchPage(),
+      const UserProfilePage(),
+    ];
+
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
+      ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {

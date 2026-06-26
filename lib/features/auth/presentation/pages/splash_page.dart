@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -22,7 +22,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBrown,
+      backgroundColor: context.surface,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -32,41 +32,41 @@ class _SplashPageState extends State<SplashPage> {
               width: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF4A2810),
+                color: context.card,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.amber.withValues(alpha: 0.3),
+                    color: context.maizeGold.withValues(alpha: 0.3),
                     blurRadius: 30,
                     spreadRadius: 8,
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.circle_outlined,
                 size: 50,
-                color: AppColors.amber,
+                color: context.maizeGold,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'PatrimonIA',
               style: TextStyle(
                 fontFamily: 'Playfair Display',
                 fontWeight: FontWeight.bold,
                 fontSize: 32,
-                color: AppColors.textOnDarkTitle,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
-            const GoldDotSeparator(),
+            const _GoldDotSeparator(),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'La memoria viva de tu comunidad',
               style: TextStyle(
                 fontFamily: 'Playfair Display',
                 fontStyle: FontStyle.italic,
                 fontSize: 14,
-                color: Color(0xFFC4A882),
+                color: context.textSecondary,
               ),
             ),
           ],
@@ -76,8 +76,8 @@ class _SplashPageState extends State<SplashPage> {
   }
 }
 
-class GoldDotSeparator extends StatelessWidget {
-  const GoldDotSeparator({super.key});
+class _GoldDotSeparator extends StatelessWidget {
+  const _GoldDotSeparator();
 
   @override
   Widget build(BuildContext context) {
@@ -89,8 +89,8 @@ class GoldDotSeparator extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 2),
           width: 3,
           height: 3,
-          decoration: const BoxDecoration(
-            color: AppColors.amber,
+          decoration: BoxDecoration(
+            color: context.maizeGold,
             shape: BoxShape.circle,
           ),
         ),

@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 import '../../../../shared/widgets/audio_player_widget.dart';
+import '../../../../core/models/memory.dart';
+import '../providers/memory_provider.dart';
 
-class DetailPage extends StatelessWidget {
+class DetailPage extends ConsumerWidget {
   const DetailPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final memory = GoRouterState.of(context).extra as Memory;
+
+    final months = [
+      '', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+    ];
+    final dateStr = '${months[memory.createdAt.month]} ${memory.createdAt.year}';
+
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.surface,
       body: Column(
         children: [
           Container(
@@ -17,7 +29,7 @@ class DetailPage extends StatelessWidget {
             height: 100,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF8B3A0A), Color(0xFF3D1A08)],
+                colors: [AppColors.headerStart, AppColors.headerEnd],
               ),
             ),
             child: SafeArea(
@@ -31,11 +43,19 @@ class DetailPage extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.electric_bolt, color: Colors.white),
-                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.electric_bolt,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          ref.read(memoryProvider.notifier).toggleLike(memory.id);
+                        },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.edit_outlined, color: Colors.white),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: Colors.white,
+                        ),
                         onPressed: () {},
                       ),
                     ],
@@ -51,41 +71,49 @@ class DetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.categoryLeyenda,
+                      color: memory.color,
                       borderRadius: BorderRadius.circular(99),
                     ),
-                    child: const Text(
-                      'Leyenda',
-                      style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                    child: Text(
+                      memory.category,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'El Nagual del Cerro Tzontehuitz',
+                  Text(
+                    memory.title,
                     style: TextStyle(
                       fontFamily: 'Playfair Display',
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
-                      color: AppColors.textOnLightTitle,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    '📍 Chamula, Chiapas · 👤 Doña Caterina Gómez · Mar 2024',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  Text(
+                    '\u{1F4CD} ${memory.location} \u{00B7} \u{1F464} ${memory.author} \u{00B7} $dateStr',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  const GoldDotSeparatorSmall(),
+                  _GoldDotSeparatorSmall(),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Cuentan los abuelos en Los Altos de Chiapas que el Cerro Tzontehuitz no es una simple elevación de tierra y árboles, sino el hogar de protectores antiguos que cambian de forma al caer el crepúsculo.\n\n'
-                    'Aquellos hombres sabios, conocidos como Naguales, asumen el espíritu de jaguares o serpientes emplumadas para vigilar que los cazadores y recolectores respeten los ciclos de la madre tierra.\n\n'
-                    'Si entras al cerro con malas intenciones, una densa neblina impregnada con aroma a copal bloqueará tu sendero, y escucharás un rugido profundo que te recordará que el patrimonio no se vende, se venera...',
+                  Text(
+                    memory.content,
                     style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textOnLightBody,
+                      color: context.textBody,
                       height: 1.6,
                     ),
                   ),
@@ -100,9 +128,7 @@ class DetailPage extends StatelessWidget {
   }
 }
 
-class GoldDotSeparatorSmall extends StatelessWidget {
-  const GoldDotSeparatorSmall({super.key});
-
+class _GoldDotSeparatorSmall extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -113,8 +139,8 @@ class GoldDotSeparatorSmall extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 1),
           width: 3,
           height: 3,
-          decoration: const BoxDecoration(
-            color: AppColors.amber,
+          decoration: BoxDecoration(
+            color: context.maizeGold,
             shape: BoxShape.circle,
           ),
         ),

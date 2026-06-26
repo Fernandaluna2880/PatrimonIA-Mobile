@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 import '../../../../shared/widgets/waveform_widget.dart';
 
 class NarradorRecordingPage extends StatelessWidget {
@@ -8,16 +9,16 @@ class NarradorRecordingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.darkBrown,
+        backgroundColor: context.appBarDarkBg,
         elevation: 0,
         leading: const Icon(Icons.close, color: Colors.white),
-        title: const Text(
+        title: Text(
           'Grabando Relato Oral',
           style: TextStyle(
             fontFamily: 'Playfair Display',
-            color: AppColors.textOnDarkTitle,
+            color: context.textPrimary,
             fontSize: 16,
           ),
         ),
@@ -29,7 +30,7 @@ class NarradorRecordingPage extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             margin: const EdgeInsets.symmetric(horizontal: 40),
             decoration: const BoxDecoration(
-              color: Color(0xFF7A2A1A),
+              color: AppColors.warmAmber,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 bottomLeft: Radius.circular(16),
@@ -42,12 +43,12 @@ class NarradorRecordingPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 40),
-          const WaveformWidget(),
+          const WaveformWidget(color: AppColors.maizeGold),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Escuchando...',
             style: TextStyle(
-              color: AppColors.amber,
+              color: context.maizeGold,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -73,13 +74,13 @@ class NarradorRecordingPage extends StatelessWidget {
                 width: 64,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.greenDark,
+                  color: AppColors.sacredJade,
                 ),
                 child: const Icon(Icons.mic, color: Colors.white, size: 30),
               ),
               CircleAvatar(
                 radius: 24,
-                backgroundColor: AppColors.amber,
+                backgroundColor: AppColors.maizeGold,
                 child: const Icon(Icons.play_arrow, color: Colors.white, size: 22),
               ),
             ],

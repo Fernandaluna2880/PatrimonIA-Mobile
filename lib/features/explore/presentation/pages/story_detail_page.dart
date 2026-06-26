@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 import '../../../../shared/widgets/audio_player_widget.dart';
+import '../../../../core/models/memory.dart';
+import '../providers/memory_provider.dart';
 
-class StoryDetailPage extends StatelessWidget {
+class StoryDetailPage extends ConsumerWidget {
   const StoryDetailPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final memory = GoRouterState.of(context).extra as Memory;
+
+    final months = [
+      '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    final dateStr = '${months[memory.createdAt.month]} ${memory.createdAt.year}';
+
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.surface,
       body: Column(
         children: [
           Container(
@@ -17,7 +29,7 @@ class StoryDetailPage extends StatelessWidget {
             height: 100,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF8B3A0A), Color(0xFF3D1A08)],
+                colors: [AppColors.headerStart, AppColors.headerEnd],
               ),
             ),
             child: SafeArea(
@@ -31,12 +43,24 @@ class StoryDetailPage extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.bookmark_border, color: Colors.white),
-                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.bookmark_border,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          ref.read(memoryProvider.notifier).toggleLike(memory.id);
+                        },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.share_outlined, color: Colors.white),
-                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Compartir próximamente')),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -51,48 +75,56 @@ class StoryDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.categoryLeyenda,
+                      color: memory.color,
                       borderRadius: BorderRadius.circular(99),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.eco, size: 12, color: Colors.white),
-                        SizedBox(width: 4),
+                        Icon(memory.icon, size: 12, color: Colors.white),
+                        const SizedBox(width: 4),
                         Text(
-                          'Leyenda',
-                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                          memory.category,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'El Nagual del Cerro Tzontehuitz',
+                  Text(
+                    memory.title,
                     style: TextStyle(
                       fontFamily: 'Playfair Display',
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
-                      color: AppColors.textOnLightTitle,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'San Cristóbal • Don Mariano • Junio 2026',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  Text(
+                    '${memory.location} \u{2022} ${memory.author} \u{2022} $dateStr',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  const GoldDotSeparatorSmall(),
+                  _GoldDotSeparatorSmall(context),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Cuentan los abuelos en Los Altos de Chiapas que el Cerro Tzontehuitz no es una simple elevación de tierra y árboles, sino el hogar de protectores antiguos que cambian de forma al caer el crepúsculo.\n\n'
-                    'Aquellos hombres sabios, conocidos como Naguales, asumen el espíritu de jaguares o serpientes emplumadas para vigilar que los cazadores y recolectores respeten los ciclos de la madre tierra.\n\n'
-                    'Si entras al cerro con malas intenciones, una densa neblina impregnada con aroma a copal bloqueará tu sendero, y escucharás un rugido profundo que te recordará que el patrimonio no se vende, se venera...',
+                  Text(
+                    memory.content,
                     style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textOnLightBody,
+                      color: context.textBody,
                       height: 1.6,
                     ),
                   ),
@@ -105,13 +137,8 @@ class StoryDetailPage extends StatelessWidget {
       ),
     );
   }
-}
 
-class GoldDotSeparatorSmall extends StatelessWidget {
-  const GoldDotSeparatorSmall({super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _GoldDotSeparatorSmall(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
@@ -120,8 +147,8 @@ class GoldDotSeparatorSmall extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 1),
           width: 3,
           height: 3,
-          decoration: const BoxDecoration(
-            color: AppColors.amber,
+          decoration: BoxDecoration(
+            color: context.maizeGold,
             shape: BoxShape.circle,
           ),
         ),

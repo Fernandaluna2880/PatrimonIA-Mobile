@@ -5,7 +5,11 @@ class WaveformWidget extends StatelessWidget {
   final int barCount;
   final Color color;
 
-  const WaveformWidget({super.key, this.barCount = 20, this.color = AppColors.amber});
+  const WaveformWidget({
+    super.key,
+    this.barCount = 20,
+    this.color = AppColors.maizeGold,
+  });
 
   @override
   Widget build(BuildContext context) {

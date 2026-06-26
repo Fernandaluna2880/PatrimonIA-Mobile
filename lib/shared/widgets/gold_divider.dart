@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_colors_extension.dart';
 
 class GoldDivider extends StatelessWidget {
   const GoldDivider({super.key});
@@ -14,8 +14,8 @@ class GoldDivider extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 2),
           width: 3,
           height: 3,
-          decoration: const BoxDecoration(
-            color: AppColors.amber,
+          decoration: BoxDecoration(
+            color: context.maizeGold,
             shape: BoxShape.circle,
           ),
         ),

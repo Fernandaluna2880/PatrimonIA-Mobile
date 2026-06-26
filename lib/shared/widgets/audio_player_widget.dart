@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_colors_extension.dart';
 
 class AudioPlayerWidget extends StatelessWidget {
   final double progress;
@@ -20,7 +20,7 @@ class AudioPlayerWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: context.card,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -34,9 +34,13 @@ class AudioPlayerWidget extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: AppColors.greenDark,
+              backgroundColor: context.sacredJade,
               radius: 22,
-              child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -48,16 +52,28 @@ class AudioPlayerWidget extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 4,
-                      backgroundColor: AppColors.strawYellow,
-                      color: AppColors.amber,
+                      backgroundColor: context.maizeGold,
+                      color: context.sacredJade,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(currentTime, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                      Text(totalTime, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text(
+                        currentTime,
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                      Text(
+                        totalTime,
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -66,8 +82,8 @@ class AudioPlayerWidget extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               speed,
-              style: const TextStyle(
-                color: AppColors.textOnLightBody,
+              style: TextStyle(
+                color: context.textBody,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),

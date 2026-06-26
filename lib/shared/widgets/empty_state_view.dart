@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_colors_extension.dart';
 
 class EmptyStateView extends StatelessWidget {
   final String title;
@@ -26,26 +26,26 @@ class EmptyStateView extends StatelessWidget {
             Icon(
               Icons.explore_outlined,
               size: 64,
-              color: AppColors.greenForest,
+              color: context.sacredJade,
             ),
             const SizedBox(height: 20),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Playfair Display',
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: AppColors.textOnLightTitle,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               description,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textMuted,
+                color: context.textSecondary,
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -55,12 +55,20 @@ class EmptyStateView extends StatelessWidget {
                 height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.greenDark,
+                    backgroundColor: context.sacredJade,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: onAction,
-                  child: Text(actionLabel!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  child: Text(
+                    actionLabel!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
               ),
             ],

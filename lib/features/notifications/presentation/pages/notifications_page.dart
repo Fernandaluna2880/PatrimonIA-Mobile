@@ -1,72 +1,88 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
+import '../../../../core/models/notification_item.dart';
+import '../../../explore/presentation/providers/notification_provider.dart';
 
-class NotificationsPage extends StatelessWidget {
+class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifications = ref.watch(notificationProvider);
+
+    final grouped = <String, List<NotificationItem>>{};
+    for (final n in notifications) {
+      final section = n.time == 'Hace 2h' || n.time == 'Hace 5h' ? 'Hoy' : 'Esta semana';
+      grouped.putIfAbsent(section, () => []).add(n);
+    }
+
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: context.appBarBg,
         elevation: 0,
-        leading: const Icon(Icons.arrow_back, color: AppColors.textOnLightTitle),
-        title: const Text(
+        leading: Icon(
+          Icons.arrow_back,
+          color: context.textPrimary,
+        ),
+        title: Text(
           'Notificaciones',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: AppColors.textOnLightTitle,
+            color: context.textPrimary,
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => ref.read(notificationProvider.notifier).markAllRead(),
+            child: Text(
+              'Mark all read',
+              style: TextStyle(
+                color: context.sacredJade,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
-          _buildSectionHeader('Hoy'),
-          _buildNotificationItem(
-            icon: Icons.auto_stories,
-            title: 'Nueva memoria agregada en tu comunidad',
-            time: 'Hace 2h',
-            dotColor: Colors.blueAccent,
-            isUnread: true,
-          ),
-          _buildNotificationItem(
-            icon: Icons.chat_bubble_outline,
-            title: 'El Narrador tiene nuevas historias para ti',
-            time: 'Hace 5h',
-            dotColor: AppColors.amber,
-            isUnread: true,
-          ),
-          _buildSectionHeader('Esta semana'),
-          _buildNotificationItem(
-            icon: Icons.verified_user_outlined,
-            title: 'Tu testimonio fue aprobado al corpus',
-            time: 'Ayer',
-            dotColor: AppColors.greenForest,
-            isUnread: false,
-          ),
+          for (final entry in grouped.entries) ...[
+            _buildSectionHeader(context, entry.key),
+            for (final notification in entry.value)
+              _buildNotificationItem(
+                context,
+                icon: notification.icon,
+                title: notification.title,
+                time: notification.time,
+                dotColor: notification.dotColor,
+                isUnread: notification.isUnread,
+              ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 12,
-          color: AppColors.textMuted,
+          color: context.textSecondary,
         ),
       ),
     );
   }
 
-  Widget _buildNotificationItem({
+  Widget _buildNotificationItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String time,
@@ -77,15 +93,17 @@ class NotificationsPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: isUnread ? Border.all(color: dotColor.withValues(alpha: 0.5), width: 1) : null,
+        border: isUnread
+            ? Border.all(color: dotColor.withValues(alpha: 0.5), width: 1)
+            : null,
       ),
       child: Row(
         children: [
           CircleAvatar(radius: 4, backgroundColor: dotColor),
           const SizedBox(width: 12),
-          Icon(icon, color: AppColors.textOnLightTitle, size: 20),
+          Icon(icon, color: context.textPrimary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -93,16 +111,19 @@ class NotificationsPage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
-                    color: AppColors.textOnLightTitle,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   time,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),

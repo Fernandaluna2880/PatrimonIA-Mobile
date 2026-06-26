@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_colors_extension.dart';
 
 class CulturalCard extends StatelessWidget {
   final String title;
@@ -23,12 +24,14 @@ class CulturalCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: isDestacada
             ? const LinearGradient(
-                colors: [Color(0xFF8B4A0A), Color(0xFF4A2010)],
+                colors: [AppColors.headerStart, AppColors.headerEnd],
               )
             : null,
-        color: isDestacada ? null : Colors.white,
+        color: isDestacada ? null : context.card,
         borderRadius: BorderRadius.circular(16),
-        border: isDestacada ? null : Border.all(color: AppColors.cardBorder, width: 0.5),
+        border: isDestacada
+            ? null
+            : Border.all(color: context.border, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +51,9 @@ class CulturalCard extends StatelessWidget {
               fontFamily: 'Playfair Display',
               fontWeight: FontWeight.bold,
               fontSize: isDestacada ? 20 : 15,
-              color: isDestacada ? AppColors.textOnDarkTitle : AppColors.textOnLightTitle,
+              color: isDestacada
+                  ? AppColors.textOnDarkTitle
+                  : context.textPrimary,
             ),
           ),
           if (isDestacada) ...[
@@ -67,11 +72,18 @@ class CulturalCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.play_circle_fill, color: AppColors.greenForest, size: 22),
+                Icon(
+                  Icons.play_circle_fill,
+                  color: context.sacredJade,
+                  size: 22,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   duration,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),

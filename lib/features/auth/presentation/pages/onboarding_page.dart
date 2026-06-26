@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -13,7 +13,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _controller = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingScreen> _screens = [
+  final List<_OnboardingScreen> _screens = const [
     _OnboardingScreen(
       icon: Icons.groups_outlined,
       title: 'Voces que no deben perderse',
@@ -43,7 +43,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A0D),
+      backgroundColor: context.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -53,12 +53,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      context.go('/login');
-                    },
-                    child: const Text(
+                    onTap: () => context.go('/login'),
+                    child: Text(
                       'Omitir',
-                      style: TextStyle(color: Color(0xFF8B7A5A), fontSize: 14),
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ],
@@ -83,27 +84,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           child: Icon(
                             screen.icon,
                             size: 80,
-                            color: AppColors.greenForest,
+                            color: context.sacredJade,
                           ),
                         ),
                         const SizedBox(height: 40),
                         Text(
                           screen.title,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Playfair Display',
                             fontWeight: FontWeight.bold,
                             fontSize: 22,
-                            color: AppColors.textOnDarkTitle,
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           screen.description,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textOnDarkBody,
+                            color: context.textBody,
                           ),
                         ),
                       ],
@@ -122,7 +123,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   height: _currentPage == index ? 10 : 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _currentPage == index ? AppColors.amber : const Color(0xFF3A3A2A),
+                    color: _currentPage == index
+                        ? context.maizeGold
+                        : context.card,
                   ),
                 ),
               ),
@@ -135,11 +138,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _currentPage == _screens.length - 1
-                        ? AppColors.amber
-                        : AppColors.greenDark,
+                    backgroundColor:
+                        _currentPage == _screens.length - 1
+                            ? context.maizeGold
+                            : context.sacredJade,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () {
                     if (_currentPage == _screens.length - 1) {
@@ -152,8 +158,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     }
                   },
                   child: Text(
-                    _currentPage == _screens.length - 1 ? 'Comenzar' : 'Siguiente →',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    _currentPage == _screens.length - 1
+                        ? 'Comenzar'
+                        : 'Siguiente →',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),

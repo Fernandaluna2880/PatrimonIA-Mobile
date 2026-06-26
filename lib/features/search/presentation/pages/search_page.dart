@@ -1,20 +1,32 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 import '../../../../shared/widgets/category_chip.dart';
+import '../../../../core/models/memory.dart';
+import '../../../explore/presentation/providers/memory_provider.dart';
 
-class SearchPage extends StatefulWidget {
+class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  ConsumerState<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends ConsumerState<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   String _activeFilter = 'Todos';
   bool _hasSubmitted = false;
+  List<Memory> _searchResults = [];
+  List<String> _recentSearches = [];
 
-  final List<String> _filters = ['Todos', 'Leyendas', 'Historia', 'Rituales', 'Música'];
+  final List<String> _filters = [
+    'Todos',
+    'Leyendas',
+    'Historia',
+    'Rituales',
+    'Música',
+  ];
 
   @override
   void dispose() {
@@ -22,10 +34,39 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
+  void _performSearch(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+    final results = ref.read(memoryProvider.notifier).search(trimmed);
+    setState(() {
+      _searchResults = results;
+      _hasSubmitted = true;
+      if (!_recentSearches.contains(trimmed)) {
+        _recentSearches.insert(0, trimmed);
+        if (_recentSearches.length > 5) {
+          _recentSearches = _recentSearches.sublist(0, 5);
+        }
+      }
+    });
+  }
+
+  List<Memory> _filteredResults() {
+    if (_activeFilter == 'Todos') return _searchResults;
+    final categoryMap = {
+      'Leyendas': 'Leyenda',
+      'Historia': 'Historia',
+      'Rituales': 'Ritual',
+      'Música': 'Canción',
+    };
+    final target = categoryMap[_activeFilter];
+    if (target == null) return _searchResults;
+    return _searchResults.where((m) => m.category == target).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,30 +75,27 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.card,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: TextField(
                   controller: _searchController,
-                  style: const TextStyle(color: AppColors.textOnLightTitle),
+                  style: TextStyle(color: context.textPrimary),
                   textInputAction: TextInputAction.search,
-                  onSubmitted: (value) {
-                    setState(() => _hasSubmitted = value.trim().isNotEmpty);
-                  },
+                  onSubmitted: (value) => _performSearch(value),
                   decoration: InputDecoration(
                     hintText: 'Busca leyendas, rituales, personajes...',
-                    hintStyle: const TextStyle(color: AppColors.textMuted),
+                    hintStyle: TextStyle(color: context.textSecondary),
                     prefixIcon: IconButton(
-                      icon: const Icon(Icons.search, color: AppColors.textMuted),
-                      onPressed: () {
-                        if (_searchController.text.trim().isNotEmpty) {
-                          setState(() => _hasSubmitted = true);
-                        }
-                      },
+                      icon: Icon(Icons.search, color: context.textSecondary),
+                      onPressed: () => _performSearch(_searchController.text),
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close, color: AppColors.textMuted),
+                            icon: Icon(
+                              Icons.close,
+                              color: context.textSecondary,
+                            ),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _hasSubmitted = false);
@@ -92,7 +130,9 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: _hasSubmitted ? _buildResultsView() : _buildLandingView(),
+              child: _hasSubmitted
+                  ? _buildResultsView(context)
+                  : _buildLandingView(context),
             ),
           ],
         ),
@@ -100,31 +140,36 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildLandingView() {
+  Widget _buildLandingView(BuildContext context) {
+    final memories = ref.watch(memoryProvider);
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       children: [
-        const Text(
+        Text(
           'Búsquedas recientes',
           style: TextStyle(
             fontFamily: 'Playfair Display',
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: AppColors.textOnLightTitle,
+            color: context.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
-        _buildRecentSearch('nagual'),
-        _buildRecentSearch('danza de los parachicos'),
-        _buildRecentSearch('tejidos tzotzil'),
+        if (_recentSearches.isEmpty) ...[
+          _buildRecentSearch(context, 'nagual'),
+          _buildRecentSearch(context, 'danza de los parachicos'),
+          _buildRecentSearch(context, 'tejidos tzotzil'),
+        ] else
+          for (final term in _recentSearches)
+            _buildRecentSearch(context, term),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Temas populares en tu comunidad',
           style: TextStyle(
             fontFamily: 'Playfair Display',
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: AppColors.textOnLightTitle,
+            color: context.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -136,100 +181,147 @@ class _SearchPageState extends State<SearchPage> {
           crossAxisSpacing: 12,
           childAspectRatio: 1.3,
           children: [
-            _buildTopicCard(Icons.eco, 'Naguales', '12 memorias'),
-            _buildTopicCard(Icons.eco, 'Medicina ancestral', '8 memorias'),
-            _buildTopicCard(Icons.auto_awesome, 'Rituales de curación', '15 memorias'),
-            _buildTopicCard(Icons.agriculture, 'Milpa sagrada', '10 memorias'),
-            _buildTopicCard(Icons.terrain, 'Cerros sagrados', '7 memorias'),
-            _buildTopicCard(Icons.palette, 'Tejidos de Zinacantán', '9 memorias'),
+            _buildTopicCard(context, Icons.eco, 'Naguales', '${memories.length} memorias'),
+            _buildTopicCard(
+              context,
+              Icons.eco,
+              'Medicina ancestral',
+              '${memories.where((m) => m.category == 'Tradición').length} memorias',
+            ),
+            _buildTopicCard(
+              context,
+              Icons.auto_awesome,
+              'Rituales de curación',
+              '${memories.where((m) => m.category == 'Ritual').length} memorias',
+            ),
+            _buildTopicCard(
+              context,
+              Icons.agriculture,
+              'Milpa sagrada',
+              '${memories.where((m) => m.category == 'Tradición').length} memorias',
+            ),
+            _buildTopicCard(
+              context,
+              Icons.terrain,
+              'Cerros sagrados',
+              '${memories.where((m) => m.category == 'Leyenda').length} memorias',
+            ),
+            _buildTopicCard(
+              context,
+              Icons.palette,
+              'Tejidos de Zinacantán',
+              '${memories.where((m) => m.location.contains('Zinacantán')).length} memorias',
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildRecentSearch(String term) {
+  Widget _buildRecentSearch(BuildContext context, String term) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.access_time, color: AppColors.textMuted, size: 20),
-      title: Text(
-        term,
-        style: const TextStyle(color: AppColors.textOnLightBody, fontSize: 14),
+      leading: Icon(Icons.access_time, color: context.textSecondary, size: 20),
+      title: InkWell(
+        onTap: () {
+          _searchController.text = term;
+          _performSearch(term);
+        },
+        child: Text(
+          term,
+          style: TextStyle(
+            color: context.textBody,
+            fontSize: 14,
+          ),
+        ),
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.close, color: AppColors.textMuted, size: 18),
-        onPressed: () {},
+        icon: Icon(Icons.close, color: context.textSecondary, size: 18),
+        onPressed: () {
+          setState(() => _recentSearches.remove(term));
+        },
       ),
     );
   }
 
-  Widget _buildTopicCard(IconData icon, String name, String count) {
+  Widget _buildTopicCard(
+    BuildContext context,
+    IconData icon,
+    String name,
+    String count,
+  ) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 24, color: AppColors.amber),
+          Icon(icon, size: 24, color: context.maizeGold),
           const SizedBox(height: 8),
           Text(
             name,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 13,
-              color: AppColors.textOnLightTitle,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             count,
-            style: const TextStyle(fontSize: 11, color: AppColors.amber),
+            style: TextStyle(fontSize: 11, color: context.maizeGold),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildResultsView() {
+  Widget _buildResultsView(BuildContext context) {
+    final results = _filteredResults();
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       children: [
         Text(
-          '18 resultados para "${_searchController.text}"',
-          style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+          '${results.length} resultados para "${_searchController.text}"',
+          style: TextStyle(fontSize: 13, color: context.textSecondary),
         ),
         const SizedBox(height: 12),
-        _buildResultCard(
-          icon: Icons.eco,
-          category: 'Leyenda',
-          title: 'El Nagual del Cerro Tzontehuitz',
-          excerpt: '...dicen los abuelos que el nagual protege la zona boscosa de cazadores furtivos al transformarse...',
-          location: 'Chamula',
-          badgeColor: AppColors.categoryLeyenda,
-        ),
-        const SizedBox(height: 8),
-        _buildResultCard(
-          icon: Icons.menu_book,
-          category: 'Historia',
-          title: 'Avistamientos en Los Altos (1974)',
-          excerpt: 'Un registro oral sobre crónicas comunitarias que detallan encuentros con un supuesto nagual felino.',
-          location: 'Tenejapa',
-          badgeColor: AppColors.categoryHistoria,
-        ),
+        for (final memory in results)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildResultCard(context, memory),
+          ),
         const SizedBox(height: 24),
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('← Anterior', style: TextStyle(color: AppColors.greenDark, fontSize: 13, fontWeight: FontWeight.w500)),
-            SizedBox(width: 16),
-            Text('15/20', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
-            SizedBox(width: 16),
-            Text('Siguiente →', style: TextStyle(color: AppColors.greenDark, fontSize: 13, fontWeight: FontWeight.w500)),
+            Text(
+              '← Anterior',
+              style: TextStyle(
+                color: context.sacredJade,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              '1/${results.length}',
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'Siguiente →',
+              style: TextStyle(
+                color: context.sacredJade,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -237,73 +329,89 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildResultCard({
-    required IconData icon,
-    required String category,
-    required String title,
-    required String excerpt,
-    required String location,
-    required Color badgeColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: badgeColor,
-                  borderRadius: BorderRadius.circular(99),
+  Widget _buildResultCard(BuildContext context, Memory memory) {
+    return GestureDetector(
+      onTap: () => context.push('/detail', extra: memory),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: memory.color,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(memory.icon, size: 10, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        memory.category,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 10, color: Colors.white),
-                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.location_on,
+                      size: 10,
+                      color: context.textSecondary,
+                    ),
+                    const SizedBox(width: 2),
                     Text(
-                      category,
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                      memory.location,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textSecondary,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.location_on, size: 10, color: AppColors.textMuted),
-                  const SizedBox(width: 2),
-                  Text(
-                    location,
-                    style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: AppColors.textOnLightTitle,
+              ],
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            excerpt,
-            style: const TextStyle(fontSize: 13, color: AppColors.textOnLightBody, height: 1.3),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              memory.title,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              memory.content.length > 100
+                  ? '${memory.content.substring(0, 100)}...'
+                  : memory.content,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textBody,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

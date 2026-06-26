@@ -1,15 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/models/memory.dart';
 import '../../../../shared/theme/app_colors.dart';
+import '../../../../shared/theme/theme_colors_extension.dart';
 import '../../../../shared/widgets/category_chip.dart';
+import '../providers/memory_provider.dart';
+import '../providers/community_provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  String _selectedCategory = 'Todos';
+
+  static const Map<String, String> _categoryMap = {
+    'Todos': 'Todos',
+    'Leyendas': 'Leyenda',
+    'Tradiciones': 'Tradición',
+    'Rituales': 'Ritual',
+    'Historia': 'Historia',
+    'Canciones': 'Canción',
+  };
+
+  @override
   Widget build(BuildContext context) {
+    final memories = ref.watch(memoryProvider);
+    final community = ref.watch(communityProvider);
+
+    final featuredMemories = memories.where((m) => m.isFeatured).toList();
+    final featuredMemory = featuredMemories.isNotEmpty ? featuredMemories.first : null;
+
+    final categoryFilter = _categoryMap[_selectedCategory]!;
+
+    List<Memory> displayMemories;
+    if (categoryFilter == 'Todos') {
+      displayMemories = List.from(memories);
+    } else {
+      displayMemories = memories.where((m) => m.category == categoryFilter).toList();
+    }
+    displayMemories.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -20,18 +57,29 @@ class HomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.darkBrown,
+                      color: context.copalBrown,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.location_on, color: AppColors.amber, size: 14),
-                        SizedBox(width: 6),
+                        Icon(
+                          Icons.location_on,
+                          color: context.maizeGold,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
                         Text(
-                          'San Cristóbal de las Casas',
-                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          community.selected?.name ?? 'San Cristóbal de las Casas',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -39,37 +87,51 @@ class HomePage extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.notifications_none_outlined, color: AppColors.textOnLightTitle),
-                        onPressed: () {},
+                        icon: Icon(
+                          Icons.notifications_none_outlined,
+                          color: context.textPrimary,
+                        ),
+                        onPressed: () => context.push('/notifications'),
                       ),
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: AppColors.greenForest,
-                        child: const Text('M', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                        backgroundColor: context.sacredJade,
+                        child: const Text(
+                          'M',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Historia destacada',
                 style: TextStyle(
                   fontFamily: 'Playfair Display',
                   fontWeight: FontWeight.bold,
                   fontSize: 22,
-                  color: AppColors.textOnLightTitle,
+                  color: context.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
               GestureDetector(
-                onTap: () => context.push('/detail'),
+                onTap: featuredMemory != null
+                    ? () => context.push('/story-detail', extra: featuredMemory)
+                    : null,
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF8B4A0A), Color(0xFF4A2010)],
+                      colors: [AppColors.headerStart, AppColors.headerEnd],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -77,27 +139,38 @@ class HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.amber,
+                          color: context.maizeGold,
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.auto_awesome, size: 12, color: Colors.white),
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 12,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'Historia destacada',
-                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'El Nagual del Cerro Tzontehuitz',
-                        style: TextStyle(
+                      Text(
+                        featuredMemory?.title ?? 'El Nagual del Cerro Tzontehuitz',
+                        style: const TextStyle(
                           fontFamily: 'Playfair Display',
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -108,17 +181,28 @@ class HomePage extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(Icons.play_arrow, color: Colors.white, size: 18),
-                              SizedBox(width: 4),
+                              const Icon(
+                                Icons.play_arrow,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
                               Text(
-                                '3 min lectura',
-                                style: TextStyle(color: Colors.white70, fontSize: 13),
+                                featuredMemory?.duration ?? '3 min lectura',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
                               ),
                             ],
                           ),
-                          const Icon(Icons.favorite_border, color: Colors.white, size: 20),
+                          const Icon(
+                            Icons.favorite_border,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ],
@@ -129,20 +213,24 @@ class HomePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Explorar por tema',
                     style: TextStyle(
                       fontFamily: 'Playfair Display',
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: AppColors.textOnLightTitle,
+                      color: context.textPrimary,
                     ),
                   ),
                   GestureDetector(
                     onTap: () {},
-                    child: const Text(
+                    child: Text(
                       'Ver todo',
-                      style: TextStyle(color: AppColors.greenDark, fontWeight: FontWeight.w600, fontSize: 13),
+                      style: TextStyle(
+                        color: context.sacredJade,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -152,11 +240,17 @@ class HomePage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    CategoryChip(label: 'Leyendas', isSelected: true, onTap: () {}),
-                    const SizedBox(width: 8),
-                    CategoryChip(label: 'Tradiciones', isSelected: false, onTap: () {}),
-                    const SizedBox(width: 8),
-                    CategoryChip(label: 'Rituales', isSelected: false, onTap: () {}),
+                    for (final entry in _categoryMap.entries)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: entry.key != _categoryMap.entries.last.key ? 8 : 0,
+                        ),
+                        child: CategoryChip(
+                          label: entry.key,
+                          isSelected: _selectedCategory == entry.key,
+                          onTap: () => setState(() => _selectedCategory = entry.key),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -164,50 +258,34 @@ class HomePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Memorias recientes',
                     style: TextStyle(
                       fontFamily: 'Playfair Display',
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: AppColors.textOnLightTitle,
+                      color: context.textPrimary,
                     ),
                   ),
                   GestureDetector(
                     onTap: () {},
-                    child: const Text(
+                    child: Text(
                       'Ver todo',
-                      style: TextStyle(color: AppColors.greenDark, fontWeight: FontWeight.w600, fontSize: 13),
+                      style: TextStyle(
+                        color: context.sacredJade,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              _buildMemoryCard(
-                Icons.eco,
-                'El Sombrerón de Zinacantán',
-                'Leyenda',
-                'San Cristóbal',
-                '3 min',
-                Colors.green,
-              ),
-              const SizedBox(height: 8),
-              _buildMemoryCard(
-                Icons.agriculture,
-                'La Milpa Sagrada',
-                'Tradición',
-                'Chamula',
-                '4 min',
-                AppColors.burntOrange,
-              ),
-              const SizedBox(height: 8),
-              _buildMemoryCard(
-                Icons.music_note,
-                'Danza del Jaguar',
-                'Ritual',
-                'Tenejapa',
-                '5 min',
-                AppColors.categoryRitual,
+              ...displayMemories.map(
+                (memory) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildMemoryCard(context, memory),
+                ),
               ),
             ],
           ),
@@ -216,78 +294,95 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMemoryCard(
-    IconData icon,
-    String title,
-    String category,
-    String location,
-    String duration,
-    Color iconColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: iconColor.withValues(alpha: 0.15),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMemoryCard(BuildContext context, Memory memory) {
+    return GestureDetector(
+      onTap: () => context.push('/detail', extra: memory),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: memory.color.withValues(alpha: 0.15),
+              child: Icon(memory.icon, color: memory.color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    memory.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: memory.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          memory.category,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: memory.color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.location_on,
+                        size: 10,
+                        color: context.textSecondary,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        memory.location,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Column(
               children: [
                 Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: AppColors.textOnLightTitle,
+                  memory.duration,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: iconColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        category,
-                        style: TextStyle(fontSize: 10, color: iconColor, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.location_on, size: 10, color: AppColors.textMuted),
-                    const SizedBox(width: 2),
-                    Text(
-                      location,
-                      style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
-                    ),
-                  ],
+                const Icon(
+                  Icons.local_fire_department,
+                  size: 16,
+                  color: Colors.redAccent,
                 ),
               ],
             ),
-          ),
-          Column(
-            children: [
-              Text(
-                duration,
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 4),
-              const Icon(Icons.local_fire_department, size: 16, color: Colors.redAccent),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
